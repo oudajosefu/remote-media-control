@@ -1,4 +1,3 @@
-use rand::RngCore;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
@@ -56,7 +55,6 @@ pub fn save(cfg: &PersistedConfig) {
 }
 
 fn generate_token() -> String {
-    let mut bytes = [0u8; 16];
-    rand::thread_rng().fill_bytes(&mut bytes);
+    let bytes: [u8; 16] = rand::random();
     hex::encode(bytes)
 }

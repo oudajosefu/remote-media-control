@@ -52,7 +52,7 @@ fn main() {
 
     let listener = match single_instance::claim_primary_listener(PORT) {
         ClaimResult::Primary(listener) => listener,
-        ClaimResult::Exit(code) if code == 0 => return,
+        ClaimResult::Exit(0) => return,
         ClaimResult::Exit(code) => std::process::exit(code),
     };
 
@@ -142,7 +142,7 @@ fn main() {
             match startup_rx.try_recv() {
                 Ok(StartupSignal::Ready) => {
                     pairing_qr_pending = false;
-                    if open::that(&current_qr_url()).is_ok() {
+                    if open::that(current_qr_url()).is_ok() {
                         app_state.mark_pairing_qr_shown();
                     }
                 }
@@ -176,7 +176,7 @@ fn main() {
                 tray_handle.set_auto_launch(auto_launch_state);
                 tray_tx.send(TrayCmd::SetAutoLaunch(auto_launch_state)).ok();
             } else if event.id == menu_ids.show_qr {
-                open::that(&current_qr_url()).ok();
+                open::that(current_qr_url()).ok();
             } else if event.id == menu_ids.quit {
                 return false; // exit loop
             }
@@ -353,7 +353,7 @@ fn run_event_loop<F: FnMut() -> bool>(mut tick: F) {
         let mut msg: MSG = std::mem::zeroed();
         loop {
             // Drain all pending Win32 messages so tray-icon's window can process them
-            while PeekMessageW(&mut msg, 0, 0, 0, PM_REMOVE) != 0 {
+            while PeekMessageW(&mut msg, std::ptr::null_mut(), 0, 0, PM_REMOVE) != 0 {
                 if msg.message == WM_QUIT {
                     return;
                 }

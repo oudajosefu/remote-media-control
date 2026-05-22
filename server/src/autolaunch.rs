@@ -6,16 +6,16 @@ pub fn set_auto_launch(enabled: bool) -> Result<(), String> {
 #[cfg(target_os = "windows")]
 mod platform {
     use std::io::ErrorKind;
-    use std::path::PathBuf;
-    use winreg::enums::*;
+    use std::path::Path;
     use winreg::RegKey;
+    use winreg::enums::*;
 
     const APP_NAME: &str = "Sofamote";
     const RUN_KEY: &str = "Software\\Microsoft\\Windows\\CurrentVersion\\Run";
     const LEGACY_RUN_VALUE_NAMES: &[&str] = &["RemoteMediaControl", "Remote Media Control"];
     const LEGACY_WRAPPER_DIR_NAMES: &[&str] = &["sofamote", "remote-media-control"];
 
-    pub fn set_auto_launch(enabled: bool, exe: &PathBuf) -> Result<(), String> {
+    pub fn set_auto_launch(enabled: bool, exe: &Path) -> Result<(), String> {
         let hkcu = RegKey::predef(HKEY_CURRENT_USER);
         let run = hkcu
             .open_subkey_with_flags(RUN_KEY, KEY_SET_VALUE | KEY_QUERY_VALUE)
@@ -27,7 +27,7 @@ mod platform {
             let cmd = format!("\"{}\"", exe.display());
             run.set_value(APP_NAME, &cmd).map_err(|e| e.to_string())
         } else {
-            run.delete_value(APP_NAME).or_else(|_| Ok(()))
+            run.delete_value(APP_NAME).or(Ok(()))
         }
     }
 
@@ -68,11 +68,11 @@ mod platform {
 
 #[cfg(target_os = "linux")]
 mod platform {
-    use std::path::PathBuf;
+    use std::path::Path;
 
     const DESKTOP_FILE: &str = "sofamote.desktop";
 
-    pub fn set_auto_launch(enabled: bool, exe: &PathBuf) -> Result<(), String> {
+    pub fn set_auto_launch(enabled: bool, exe: &Path) -> Result<(), String> {
         let autostart = dirs::config_dir().ok_or("no config dir")?.join("autostart");
         let desktop = autostart.join(DESKTOP_FILE);
         if enabled {
@@ -83,18 +83,18 @@ mod platform {
             );
             std::fs::write(&desktop, content).map_err(|e| e.to_string())
         } else {
-            std::fs::remove_file(&desktop).or_else(|_| Ok(()))
+            std::fs::remove_file(&desktop).or(Ok(()))
         }
     }
 }
 
 #[cfg(target_os = "macos")]
 mod platform {
-    use std::path::PathBuf;
+    use std::path::Path;
 
     const PLIST_FILE: &str = "com.sofamote.plist";
 
-    pub fn set_auto_launch(enabled: bool, exe: &PathBuf) -> Result<(), String> {
+    pub fn set_auto_launch(enabled: bool, exe: &Path) -> Result<(), String> {
         let agents_dir = dirs::home_dir()
             .ok_or("no home dir")?
             .join("Library")
@@ -117,15 +117,15 @@ mod platform {
             );
             std::fs::write(&plist, content).map_err(|e| e.to_string())
         } else {
-            std::fs::remove_file(&plist).or_else(|_| Ok(()))
+            std::fs::remove_file(&plist).or(Ok(()))
         }
     }
 }
 
 #[cfg(not(any(target_os = "windows", target_os = "linux", target_os = "macos")))]
 mod platform {
-    use std::path::PathBuf;
-    pub fn set_auto_launch(_enabled: bool, _exe: &PathBuf) -> Result<(), String> {
+    use std::path::Path;
+    pub fn set_auto_launch(_enabled: bool, _exe: &Path) -> Result<(), String> {
         Err("auto-launch not supported on this platform".into())
     }
 }

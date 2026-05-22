@@ -40,7 +40,7 @@ mod imp {
         if (r#type == PBT_APMRESUMESUSPEND || r#type == PBT_APMRESUMEAUTOMATIC)
             && !context.is_null()
         {
-            let sender = &*(context as *const UnboundedSender<()>);
+            let sender = unsafe { &*(context as *const UnboundedSender<()>) };
             sender.send(()).ok();
         }
         0 // S_OK

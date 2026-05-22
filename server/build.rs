@@ -131,7 +131,7 @@ fn write_ico(path: &Path, sizes: &[u32]) {
 
 #[cfg(target_os = "windows")]
 fn embed_windows_resources(icon_path: &Path) {
-    let mut resource = winres::WindowsResource::new();
+    let mut resource = winresource::WindowsResource::new();
     resource.set_icon(icon_path.to_str().unwrap());
     resource.compile().unwrap();
 }
