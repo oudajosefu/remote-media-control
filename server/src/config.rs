@@ -24,15 +24,8 @@ pub fn config_path() -> PathBuf {
 }
 
 pub fn load_or_create() -> PersistedConfig {
-    let path = config_path();
-    if path.exists() {
-        if let Ok(s) = std::fs::read_to_string(&path) {
-            if let Ok(cfg) = serde_json::from_str::<PersistedConfig>(&s) {
-                if cfg.token.len() >= 32 {
-                    return cfg;
-                }
-            }
-        }
+    if let Some(cfg) = read_existing() {
+        return cfg;
     }
     let cfg = PersistedConfig {
         token: generate_token(),
@@ -42,6 +35,13 @@ pub fn load_or_create() -> PersistedConfig {
     };
     save(&cfg);
     cfg
+}
+
+fn read_existing() -> Option<PersistedConfig> {
+    let path = config_path();
+    let s = std::fs::read_to_string(&path).ok()?;
+    let cfg: PersistedConfig = serde_json::from_str(&s).ok()?;
+    (cfg.token.len() >= 32).then_some(cfg)
 }
 
 pub fn save(cfg: &PersistedConfig) {

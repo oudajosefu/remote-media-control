@@ -16,7 +16,6 @@ mod tray;
 mod types;
 mod ws;
 
-use std::future::IntoFuture;
 use std::net::Ipv4Addr;
 use std::sync::{mpsc, Arc, RwLock};
 use std::time::Duration;
@@ -60,8 +59,7 @@ fn main() {
     let token = cfg.token.clone();
     let lan_ip = net::get_lan_ip();
     let pairing_url = Arc::new(RwLock::new(format!(
-        "http://{}:{}/?t={}",
-        lan_ip, PORT, token
+        "http://{lan_ip}:{PORT}/?t={token}"
     )));
 
     if PRINT_PAIRING_QR {
@@ -128,8 +126,8 @@ fn main() {
             .read()
             .expect("pairing_url lock poisoned")
             .clone();
-        let base = url.split('?').next().unwrap_or(&url);
-        format!("{}qr.png", base)
+        let base = url.split_once('?').map_or(url.as_str(), |(b, _)| b);
+        format!("{base}qr.png")
     };
 
     // Main thread event loop.
@@ -198,7 +196,7 @@ fn main() {
     // and releases the boxed sender (causing the resume task to exit cleanly).
 }
 
-#[allow(clippy::too_many_arguments)]
+#[expect(clippy::too_many_arguments)]
 async fn run_server(
     state: Arc<AppState>,
     mut tray_rx: tokio::sync::mpsc::UnboundedReceiver<TrayCmd>,
@@ -326,7 +324,7 @@ fn refresh_pairing_url(pairing_url: &Arc<RwLock<String>>, token: &str) -> bool {
         .clone();
     let previous_ip = extract_ip_from_pairing_url(&current);
     let new_ip = net::pick_lan_ip(previous_ip);
-    let new_url = format!("http://{}:{}/?t={}", new_ip, PORT, token);
+    let new_url = format!("http://{new_ip}:{PORT}/?t={token}");
     if new_url == current {
         return false;
     }
@@ -388,9 +386,9 @@ fn print_qr(url: &str) {
             .dark_color(unicode::Dense1x2::Light)
             .light_color(unicode::Dense1x2::Dark)
             .build();
-        println!("\n{}", rendered);
+        println!("\n{rendered}");
     }
-    let base = url.split('?').next().unwrap_or(url);
-    println!("Pairing URL : {}", url);
-    println!("QR image    : {}qr.png\n", base);
+    let base = url.split_once('?').map_or(url, |(b, _)| b);
+    println!("Pairing URL : {url}");
+    println!("QR image    : {base}qr.png\n");
 }

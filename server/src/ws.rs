@@ -26,8 +26,7 @@ pub async fn ws_handler(
         .headers()
         .get(header::UPGRADE)
         .and_then(|v| v.to_str().ok())
-        .map(|s| s.eq_ignore_ascii_case("websocket"))
-        .unwrap_or(false);
+        .is_some_and(|s| s.eq_ignore_ascii_case("websocket"));
 
     if !is_ws_upgrade {
         return match crate::http::get_index_html() {

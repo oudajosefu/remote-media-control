@@ -16,6 +16,17 @@ struct Inner {
     has_shown_pairing_qr: bool,
 }
 
+impl Inner {
+    fn snapshot(&self) -> PersistedConfig {
+        PersistedConfig {
+            token: self.token.clone(),
+            is_active: self.is_active,
+            auto_launch: self.auto_launch,
+            has_shown_pairing_qr: self.has_shown_pairing_qr,
+        }
+    }
+}
+
 pub struct AppState {
     inner: RwLock<Inner>,
     pub tx: broadcast::Sender<StateEvent>,
@@ -49,12 +60,7 @@ impl AppState {
             return;
         }
         inner.is_active = next;
-        let cfg = PersistedConfig {
-            token: inner.token.clone(),
-            is_active: inner.is_active,
-            auto_launch: inner.auto_launch,
-            has_shown_pairing_qr: inner.has_shown_pairing_qr,
-        };
+        let cfg = inner.snapshot();
         drop(inner);
         config::save(&cfg);
         self.tx.send(StateEvent::ActiveChanged(next)).ok();
@@ -63,12 +69,7 @@ impl AppState {
     pub async fn set_auto_launch(&self, next: bool) {
         let mut inner = self.inner.write().await;
         inner.auto_launch = next;
-        let cfg = PersistedConfig {
-            token: inner.token.clone(),
-            is_active: inner.is_active,
-            auto_launch: inner.auto_launch,
-            has_shown_pairing_qr: inner.has_shown_pairing_qr,
-        };
+        let cfg = inner.snapshot();
         drop(inner);
         config::save(&cfg);
     }
@@ -79,12 +80,7 @@ impl AppState {
             return;
         }
         inner.has_shown_pairing_qr = true;
-        let cfg = PersistedConfig {
-            token: inner.token.clone(),
-            is_active: inner.is_active,
-            auto_launch: inner.auto_launch,
-            has_shown_pairing_qr: inner.has_shown_pairing_qr,
-        };
+        let cfg = inner.snapshot();
         drop(inner);
         config::save(&cfg);
     }

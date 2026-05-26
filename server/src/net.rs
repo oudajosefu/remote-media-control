@@ -15,16 +15,16 @@ pub fn list_lan_ips() -> Vec<IpAddr> {
 pub fn pick_lan_ip(previous: Option<IpAddr>) -> String {
     let candidates = list_lan_ips();
 
-    if let Some(prev) = previous {
-        if candidates.contains(&prev) {
-            return prev.to_string();
-        }
+    if let Some(prev) = previous
+        && candidates.contains(&prev)
+    {
+        return prev.to_string();
     }
 
-    if let Ok(default) = local_ip_address::local_ip() {
-        if candidates.contains(&default) {
-            return default.to_string();
-        }
+    if let Ok(default) = local_ip_address::local_ip()
+        && candidates.contains(&default)
+    {
+        return default.to_string();
     }
 
     candidates

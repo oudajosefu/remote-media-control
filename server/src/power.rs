@@ -48,7 +48,7 @@ mod imp {
 
     pub fn register(tx: UnboundedSender<()>) -> Option<ResumeRegistration> {
         let ctx = Box::new(tx);
-        let context_ptr = &*ctx as *const UnboundedSender<()> as *const c_void;
+        let context_ptr = &raw const *ctx as *const c_void;
 
         let mut params = Box::new(DEVICE_NOTIFY_SUBSCRIBE_PARAMETERS {
             Callback: Some(callback),
@@ -57,7 +57,7 @@ mod imp {
 
         let handle = unsafe {
             RegisterSuspendResumeNotification(
-                &mut *params as *mut _ as HANDLE,
+                &raw mut *params as HANDLE,
                 DEVICE_NOTIFY_CALLBACK,
             )
         };
